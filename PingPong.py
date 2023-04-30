@@ -1,150 +1,197 @@
-import discord 
-from tkinter import *
-from random import randrange as rnd
-import time
-root = Tk()
-root.geometry('600x800')
-canv = Canvas(root, bg = '#0044aa')
-canv.pack(fill=BOTH,expand = 1)
- 
-class ball():
-    def __init__(self):
-        self.x = 0
-        self.y = 0
-        self.r = 10
-        self.vx = 0
-        self.vy = 0
-        self.goal = 0
-        self.id= canv.create_oval(self.x-self.r,self.y-self.r,self.x+self.r,self.y+self.r, fill = 'white')
-         
-    def move(self):
-        self.x += self.vx
-        self.y += self.vy
-        active_wall = list(set(canv.find_withtag('wall')) & set(canv.find_overlapping(self.x - self.r*0.7,self.y - self.r*0.7,self.x + self.r*0.7,self.y + self.r*0.7)))
-        if active_wall:
-            if 'x' in canv.gettags(active_wall[0]):
-                self.vx = -self.vx
-            if 'y' in canv.gettags(active_wall[0]):
-                self.vy = -self.vy
-                x1,y1,x2,y2 = canv.coords(active_wall[0])
-                xc = (x1+x2)/2
-                w = abs(x1-x2)
-                self.vx += (self.x-xc)/w*10
-        self.paint()
-        lines = canv.find_overlapping(self.x - self.r*0.7,self.y - self.r*0.7,self.x + self.r*0.7,self.y + self.r*0.7)
-        if len(lines) > 1:
-            if "g1" in canv.gettags(lines[1]):
-                self.goal = 1
-                self.kill()
-            if "g2" in canv.gettags(lines[1]):
-                self.goal = 2
-                self.kill()
-    def kill(self):
-        global game
-        game = 0
-        self.x = 300
-        self.vx = 0
-        if self.goal == 2:
-            self.vy = -8
-            self.y = 100
-        if self.goal == 1:
-            self.y = 700
-            self.vy = 8
-        self.paint()
-     
-    def paint(self):
-        canv.coords(self.id, self.x-self.r,self.y-self.r,self.x+self.r,self.y+self.r)
-         
-class gamer():
-    def __init__(self):
-        self.x = 0
-        self.y = 0
-        self.w = 60
-        self.v = 3
-        self.d = 4
-        self.mode = ''
-        self.score = 0
-        self.xy_score = (0,0)
-        self.id= canv.create_rectangle(self.x-self.w,self.y-self.d,self.x+self.w,self.y+self.d, fill = 'white', tags = ('wall','y'))
-        self.id_score = canv.create_text(0,0,text = '', font = 'Tahoma 24', fill = 'white')
-         
-    def paint(self):
-        canv.coords(self.id, self.x-self.w,self.y-self.d,self.x+self.w,self.y+self.d)
-        canv.coords(self.id_score, self.xy_score[0],self.xy_score[1])
-        canv.itemconfig(self.id_score, text = self.score)
- 
-    def move(self):
-        if self.mode == 'left' and self.x > self.w//2:
-            self.x -= self.v
-        elif self.mode == 'right' and self.x < (590-self.w//2):
-            self.x += self.v
-        self.paint()
- 
-b = ball()
-b.x = 100
-b.y = 100
-b.vx = 4
-b.vy = 4
- 
-         
-canv.create_line(10,10,10,790,width = 10, fill = 'white', tags = ('wall','x'))
-canv.create_line(590,10,590,790,width = 10, fill = 'white', tags = ('wall','x'))
-canv.create_line(10,790/2,590,790/2,width = 2, fill = 'white')
- 
-canv.create_line(10,11,590,11,width = 2, fill = 'white', tag = 'g1')
-canv.create_line(10,789,590,789,width = 2, fill = 'white', tag = 'g2')
- 
- 
-g1 = gamer()
-g1.x = 300
-g1.y = 20
-g1.paint()
-g1.xy_score = (30,50)
- 
-g2 = gamer()
-g2.x = 300
-g2.y = 780
-g2.paint()
-g2.xy_score = (30,450)
-game =  1
-def key_press(event):
-    global game
-    if event.keycode == 37:
-        g2.mode = 'left'
-    elif event.keycode == 39:
-        g2.mode = 'right'
- 
-    elif event.keycode == 65:
-        g1.mode = 'left'
-    elif event.keycode == 68:
-        g1.mode = 'right'
-         
-    elif event.keycode == 32:
-        game = 1
- 
-def key_release(event):
-    if event.keycode == 37 or event.keycode == 39:
-        g2.mode = ''
- 
-    elif event.keycode == 65 or event.keycode == 68:
-        g1.mode = ''
- 
-root.bind('<Key>', key_press)
-root.bind('<KeyRelease>', key_release)
- 
-while 1:
-    if game:
-        b.move()
-    g2.move()
-    g1.move()
-    if b.goal == 1:
-        g2.score += 1
-        b.goal = 0
-    elif b.goal == 2:
-        g1.score += 1
-        b.goal = 0
-    time.sleep(0.02)
-    canv.update()   
-     
- 
-mainloop()
+import pygame
+  
+pygame.init()
+  
+# Font that is used to render the text
+font20 = pygame.font.Font('freesansbold.ttf', 20)
+  
+# RGB values of standard colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+  
+# Basic parameters of the screen
+WIDTH, HEIGHT = 900, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Pong")
+  
+clock = pygame.time.Clock()    
+FPS = 30
+  
+# Striker class
+  
+  
+class Striker:
+        # Take the initial position, dimensions, speed and color of the object
+    def __init__(self, posx, posy, width, height, speed, color):
+        self.posx = posx
+        self.posy = posy
+        self.width = width
+        self.height = height
+        self.speed = speed
+        self.color = color
+        # Rect that is used to control the position and collision of the object
+        self.geekRect = pygame.Rect(posx, posy, width, height)
+        # Object that is blit on the screen
+        self.geek = pygame.draw.rect(screen, self.color, self.geekRect)
+  
+    # Used to display the object on the screen
+    def display(self):
+        self.geek = pygame.draw.rect(screen, self.color, self.geekRect)
+  
+    def update(self, yFac):
+        self.posy = self.posy + self.speed*yFac
+  
+        # Restricting the striker to be below the top surface of the screen
+        if self.posy <= 0:
+            self.posy = 0
+        # Restricting the striker to be above the bottom surface of the screen
+        elif self.posy + self.height >= HEIGHT:
+            self.posy = HEIGHT-self.height
+  
+        # Updating the rect with the new values
+        self.geekRect = (self.posx, self.posy, self.width, self.height)
+  
+    def displayScore(self, text, score, x, y, color):
+        text = font20.render(text+str(score), True, color)
+        textRect = text.get_rect()
+        textRect.center = (x, y)
+  
+        screen.blit(text, textRect)
+  
+    def getRect(self):
+        return self.geekRect
+  
+# Ball class
+  
+  
+class Ball:
+    def __init__(self, posx, posy, radius, speed, color):
+        self.posx = posx
+        self.posy = posy
+        self.radius = radius
+        self.speed = speed
+        self.color = color
+        self.xFac = 1
+        self.yFac = -1
+        self.ball = pygame.draw.circle(
+            screen, self.color, (self.posx, self.posy), self.radius)
+        self.firstTime = 1
+  
+    def display(self):
+        self.ball = pygame.draw.circle(
+            screen, self.color, (self.posx, self.posy), self.radius)
+  
+    def update(self):
+        self.posx += self.speed*self.xFac
+        self.posy += self.speed*self.yFac
+  
+        # If the ball hits the top or bottom surfaces, 
+        # then the sign of yFac is changed and 
+        # it results in a reflection
+        if self.posy <= 0 or self.posy >= HEIGHT:
+            self.yFac *= -1
+  
+        if self.posx <= 0 and self.firstTime:
+            self.firstTime = 0
+            return 1
+        elif self.posx >= WIDTH and self.firstTime:
+            self.firstTime = 0
+            return -1
+        else:
+            return 0
+  
+    def reset(self):
+        self.posx = WIDTH//2
+        self.posy = HEIGHT//2
+        self.xFac *= -1
+        self.firstTime = 1
+  
+    # Used to reflect the ball along the X-axis
+    def hit(self):
+        self.xFac *= -1
+  
+    def getRect(self):
+        return self.ball
+  
+# Game Manager
+  
+  
+def main():
+    running = True
+  
+    # Defining the objects
+    geek1 = Striker(20, 0, 10, 100, 10, GREEN)
+    geek2 = Striker(WIDTH-30, 0, 10, 100, 10, GREEN)
+    ball = Ball(WIDTH//2, HEIGHT//2, 7, 7, WHITE)
+  
+    listOfGeeks = [geek1, geek2]
+  
+    # Initial parameters of the players
+    geek1Score, geek2Score = 0, 0
+    geek1YFac, geek2YFac = 0, 0
+  
+    while running:
+        screen.fill(BLACK)
+  
+        # Event handling
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    geek2YFac = -1
+                if event.key == pygame.K_DOWN:
+                    geek2YFac = 1
+                if event.key == pygame.K_w:
+                    geek1YFac = -1
+                if event.key == pygame.K_s:
+                    geek1YFac = 1
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+                    geek2YFac = 0
+                if event.key == pygame.K_w or event.key == pygame.K_s:
+                    geek1YFac = 0
+  
+        # Collision detection
+        for geek in listOfGeeks:
+            if pygame.Rect.colliderect(ball.getRect(), geek.getRect()):
+                ball.hit()
+  
+        # Updating the objects
+        geek1.update(geek1YFac)
+        geek2.update(geek2YFac)
+        point = ball.update()
+  
+        # -1 -> Geek_1 has scored
+        # +1 -> Geek_2 has scored
+        #  0 -> None of them scored
+        if point == -1:
+            geek1Score += 1
+        elif point == 1:
+            geek2Score += 1
+  
+        # Someone has scored
+        # a point and the ball is out of bounds.
+        # So, we reset it's position
+        if point:   
+            ball.reset()
+  
+        # Displaying the objects on the screen
+        geek1.display()
+        geek2.display()
+        ball.display()
+  
+        # Displaying the scores of the players
+        geek1.displayScore("первый : ", 
+                           geek1Score, 100, 20, WHITE)
+        geek2.displayScore("второй : ", 
+                           geek2Score, WIDTH-100, 20, WHITE)
+  
+        pygame.display.update()
+        clock.tick(FPS)     
+  
+  
+if __name__ == "__main__":
+    main()
+    pygame.quit()
