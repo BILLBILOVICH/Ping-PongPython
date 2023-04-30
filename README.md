@@ -5,3 +5,4 @@
 # 'K_right', K_left', second player controller
 
 # WARNING FOR START GAME YOU SHOULD DOWNLOAD PYTHON VERSION 3 YOU CAN DOWNLOAD IT ON SITE https://www.python.org/ GOOD LUCK
+'also for launch file you need turn on cmd and write "py PingPong.py"'
